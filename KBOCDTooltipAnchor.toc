@@ -2,10 +2,16 @@
 ## Title: KBOCD Tooltip Anchor
 ## Notes: Anchor the default tooltip to a specific location on screen
 ## Author: KurenBatsu
-## Version: 1.0.1
+## Version: 1.1
+## SavedVariables: KBOCDTooltipAnchorGlobalDB
 ## SavedVariablesPerCharacter: KBOCDTooltipAnchorDB
 
+KBOCD_UI_Library/KBOCD_UI_Functions.lua
+KBOCD_UI_Library/KBOCD_UI_Options_Elements.lua
+
 KBOCD_Tooltip_Anchor_Core.lua
-KBOCD_Tooltip_Anchor_ConfigCore.lua
-KBOCD_Tooltip_Anchor_ConfigElements.lua
-KBOCD_Tooltip_Anchor_Config.lua
+
+Options/KBOCD_Tooltip_Anchor_OptionsDB.lua
+Options/KBOCD_Tooltip_Anchor_Options.lua
+
+KBOCD_Tooltip_Anchor_FinalEventHandler.lua

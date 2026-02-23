@@ -7,12 +7,13 @@ KBOCDTooltipAnchor = KBOCDTooltipAnchor or {}
 -- Table Values
 --------------------------------------------------
 KBOCDTooltipAnchor.DefaultValues = {
-    enabled             = true,
-    anchorFrameVisible  = true,
-    selectedAnchor      = "TOPLEFT",
-    point               = "CENTER",
-    xPos                = 0,
-    yPos                = 0
+    enabled                 = true,
+    anchorFrameVisible      = true,
+    perCharacterSettings    = true,
+    selectedAnchor          = "TOPLEFT",
+    point                   = "CENTER",
+    xPos                    = 0,
+    yPos                    = 0
 }
 
 KBOCDTooltipAnchor.AnchorPoints = {
@@ -58,9 +59,9 @@ function KBOCDTooltipAnchor.CreateTooltipAnchorFrame()
     local tooltipAnchor = CreateFrame("Frame", "KBOCDTooltipAnchor_AnchorFrame", UIParent)
     tooltipAnchor:SetSize(200, 100)
     tooltipAnchor:ClearAllPoints()
-    tooltipAnchor:SetPoint(KBOCDTooltipAnchorDB.point, UIParent, KBOCDTooltipAnchorDB.point, KBOCDTooltipAnchorDB.xPos, KBOCDTooltipAnchorDB.yPos)
-    tooltipAnchor:SetMovable(KBOCDTooltipAnchorDB.anchorFrameVisible)
-    tooltipAnchor:EnableMouse(KBOCDTooltipAnchorDB.anchorFrameVisible)
+    tooltipAnchor:SetPoint(KBOCDTooltipAnchorActiveDB.point, UIParent, KBOCDTooltipAnchorActiveDB.point, KBOCDTooltipAnchorActiveDB.xPos, KBOCDTooltipAnchorActiveDB.yPos)
+    tooltipAnchor:SetMovable(KBOCDTooltipAnchorActiveDB.anchorFrameVisible)
+    tooltipAnchor:EnableMouse(KBOCDTooltipAnchorActiveDB.anchorFrameVisible)
     tooltipAnchor:RegisterForDrag("LeftButton")
     tooltipAnchor:SetClampedToScreen(true)
 
@@ -70,7 +71,7 @@ function KBOCDTooltipAnchor.CreateTooltipAnchorFrame()
     tooltipAnchor:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
         KBOCDTooltipAnchor.SaveAnchorPosition()
-        tooltipAnchor:SetPoint(KBOCDTooltipAnchorDB.point, UIParent, KBOCDTooltipAnchorDB.point, KBOCDTooltipAnchorDB.xPos, KBOCDTooltipAnchorDB.yPos)
+        tooltipAnchor:SetPoint(KBOCDTooltipAnchorActiveDB.point, UIParent, KBOCDTooltipAnchorActiveDB.point, KBOCDTooltipAnchorActiveDB.xPos, KBOCDTooltipAnchorActiveDB.yPos)
     end)
 
     tooltipAnchor.bg = tooltipAnchor:CreateTexture(nil, "BACKGROUND")
@@ -96,7 +97,7 @@ function KBOCDTooltipAnchor.UpdateSelectedAnchorButton(selectedAnchorPoint)
     selectedAnchorButton.texture:SetColorTexture(1, 0, 0, 0.8)
     previousAnchorButton.texture:SetColorTexture(1, 1, 1, 0.8)
 
-    KBOCDTooltipAnchorDB.selectedAnchor = KBOCDTooltipAnchor.AnchorPoints[KBOCDTooltipAnchor.currentlySelectedAnchorPoint]
+    KBOCDTooltipAnchorActiveDB.selectedAnchor = KBOCDTooltipAnchor.AnchorPoints[KBOCDTooltipAnchor.currentlySelectedAnchorPoint]
 end
 
 function KBOCDTooltipAnchor.AnchorTooltip(tooltip)
@@ -118,9 +119,9 @@ function KBOCDTooltipAnchor.SaveAnchorPosition()
     if not tooltipAnchorFrame then return end
     local point, _, _, xOffset, yOffset = tooltipAnchorFrame:GetPoint()
     if point == nil or xOffset == nil or yOffset== nil then return end
-    KBOCDTooltipAnchorDB.point          = point
-    KBOCDTooltipAnchorDB.xPos           = xOffset
-    KBOCDTooltipAnchorDB.yPos           = yOffset
+    KBOCDTooltipAnchorActiveDB.point          = point
+    KBOCDTooltipAnchorActiveDB.xPos           = xOffset
+    KBOCDTooltipAnchorActiveDB.yPos           = yOffset
 end
 
 hooksecurefunc("GameTooltip_SetDefaultAnchor", function(self)
@@ -128,10 +129,17 @@ hooksecurefunc("GameTooltip_SetDefaultAnchor", function(self)
     KBOCDTooltipAnchor.AnchorTooltip(self)
 end)
 
-function KBOCDTooltipAnchor.UpdateAnchorFrameEnablement()
-    if KBOCDTooltipAnchorDB.enabled and not KBOCDTooltipAnchor.tooltipAnchor then
+function KBOCDTooltipAnchor.UpdateAnchorFrameEnablement(switchingDB)
+    if switchingDB then
+        if KBOCDTooltipAnchor.tooltipAnchor then
+            KBOCDTooltipAnchor.tooltipAnchor:Hide()
+        end
+        KBOCDTooltipAnchor.tooltipAnchor = nil
+    end
+    if KBOCDTooltipAnchorActiveDB.enabled and not KBOCDTooltipAnchor.tooltipAnchor then
         KBOCDTooltipAnchor.tooltipAnchor = KBOCDTooltipAnchor.CreateTooltipAnchorFrame()
-    elseif not KBOCDTooltipAnchorDB.enabled and KBOCDTooltipAnchor.tooltipAnchor then
+        KBOCDTooltipAnchor.UpdateAnchorFrameVisibility()
+    elseif not KBOCDTooltipAnchorActiveDB.enabled and KBOCDTooltipAnchor.tooltipAnchor then
         KBOCDTooltipAnchor.tooltipAnchor:Hide()
         KBOCDTooltipAnchor.tooltipAnchor = nil
     end
@@ -141,11 +149,11 @@ function KBOCDTooltipAnchor.UpdateAnchorFrameVisibility()
     local tooltipAnchorFrame = KBOCDTooltipAnchor.tooltipAnchor
     if not tooltipAnchorFrame then return end
 
-    tooltipAnchorFrame:SetMovable(KBOCDTooltipAnchorDB.anchorFrameVisible)
-    tooltipAnchorFrame:EnableMouse(KBOCDTooltipAnchorDB.anchorFrameVisible)
+    tooltipAnchorFrame:SetMovable(KBOCDTooltipAnchorActiveDB.anchorFrameVisible)
+    tooltipAnchorFrame:EnableMouse(KBOCDTooltipAnchorActiveDB.anchorFrameVisible)
 
     local alpha = 0
-    if KBOCDTooltipAnchorDB.anchorFrameVisible then
+    if KBOCDTooltipAnchorActiveDB.anchorFrameVisible then
         alpha = 1
     end
     tooltipAnchorFrame:SetAlpha(alpha)
@@ -154,15 +162,15 @@ end
 --------------------------------------------------
 -- User Defined Values (Uses 'DefaultValues' values if user defined values do not exist)
 --------------------------------------------------
-function KBOCDTooltipAnchor.CopyDefaultValues(src, dest, resetToDefaults)
+function KBOCDTooltipAnchor.CopyDefaultValues(src, dest)
     for key, value in pairs(src) do
         if type(value) == "table" then
-            if type(dest[key]) ~= "table" or resetToDefaults then
+            if type(dest[key]) ~= "table" then
                 dest[key] = {}
             end
             KBOCDTooltipAnchor.CopyDefaultValues(value, dest[key])
         else
-            if dest[key] == nil or resetToDefaults then
+            if dest[key] == nil then
                 dest[key] = value
             end
         end
@@ -174,13 +182,28 @@ end
 --------------------------------------------------
 function KBOCDTooltipAnchor.InitializeUserValues()
     KBOCDTooltipAnchorDB = KBOCDTooltipAnchorDB or {}
+    KBOCDTooltipAnchorGlobalDB = KBOCDTooltipAnchorGlobalDB or {}
+    KBOCDTooltipAnchor.SwitchActiveDB()
     KBOCDTooltipAnchor.CopyDefaultValues(KBOCDTooltipAnchor.DefaultValues, KBOCDTooltipAnchorDB)
+    KBOCDTooltipAnchor.CopyDefaultValues(KBOCDTooltipAnchor.DefaultValues, KBOCDTooltipAnchorGlobalDB)
 end
 
 --------------------------------------------------
--- Reset DB Values
+-- Active DB Switcher
 --------------------------------------------------
-function KBOCDTooltipAnchor.ResetUserValuesFor(dbTable, defaultValuesTable)
-    KBOCDTooltipAnchorDB = KBOCDTooltipAnchorDB or {}
-    KBOCDTooltipAnchor.CopyDefaultValues(defaultValuesTable, dbTable, true)
+function KBOCDTooltipAnchor.SwitchActiveDB(calledFromSettings)
+    if KBOCDTooltipAnchorDB.perCharacterSettings then
+        KBOCDTooltipAnchorDB = KBOCDTooltipAnchorDB or {}
+        KBOCDTooltipAnchorActiveDB = KBOCDTooltipAnchorDB
+    else
+        KBOCDTooltipAnchorGlobalDB = KBOCDTooltipAnchorGlobalDB or {}
+        KBOCDTooltipAnchorActiveDB = KBOCDTooltipAnchorGlobalDB
+    end
+
+    if calledFromSettings then
+        KBOCDTooltipAnchor.enabledCheckBoxSetting:NotifyUpdate()
+        KBOCDTooltipAnchor.disableAndMakeMoveableSetting:NotifyUpdate()
+        KBOCDTooltipAnchor.UpdateAnchorFrameEnablement(true)
+        KBOCDTooltipAnchor.UpdateAnchorFrameVisibility()
+    end
 end
