@@ -1,8 +1,8 @@
-## Interface: 120001
+## Interface: 120100, 16001
 ## Title: KBOCD Tooltip Anchor
 ## Notes: Anchor the default tooltip to a specific location on screen
 ## Author: KurenBatsu
-## Version: 1.1
+## Version: 1.1.1
 ## SavedVariables: KBOCDTooltipAnchorGlobalDB
 ## SavedVariablesPerCharacter: KBOCDTooltipAnchorDB
 
